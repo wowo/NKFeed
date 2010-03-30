@@ -96,7 +96,6 @@ class NKFeed
     $subresult = array();
     foreach ((array)$events as $event) {
       if ($i == 0) {
-        var_dump($event);
         $subresult['thumb'] = (string)$event['src'];
       } elseif ($i == 1) {
         $subresult['comment'] = str_replace("\n", " ", (string)$event);
@@ -108,19 +107,10 @@ class NKFeed
         $i = 0;
       }
     }
-    var_dump($result);
-    //var_dump($events);
-    /*
-    foreach ($events as $eventDate) {
-      $date = (string)$eventDate->div;
-      var_dump($date);
-      var_dump($eventDate->xpath("//img[@class='event_icon']"));
-    }
-    */
-
+    return $result;
   }
 }
 
 $feed = new NKFeed(@$_SERVER['argv'][1], @$_SERVER['argv'][2]);
-//print_r($feed->getFriendsPhotos());
-$feed->getEvents();
+print_r($feed->getFriendsPhotos());
+print_r($feed->getEvents());
