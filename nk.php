@@ -14,25 +14,29 @@ class NKFeed
   protected function loadCredentials()
   {
     if ($_SERVER['argc'] < 3) {
-      throw new Exception('Podaj login i hasło jako parametry');
+      throw new Exception('Pass login and password');
     }
-    $login    = @$_SERVER['argv'][1];
-    $password = @$_SERVER['argv'][2];
+    $this->login    = @$_SERVER['argv'][1];
+    $this->password = @$_SERVER['argv'][2];
   }
 
   protected function getContent()
   {
     $curl = curl_init();
+    $data = sprintf("login=%s&password=%s", $this->login, $this->password);
     curl_setopt_array($curl, array(
       CURLOPT_COOKIEJAR  => "/tmp/nk.cookie",
       CURLOPT_FOLLOWLOCATION => true,
-      CURLOPT_POSTFIELDS => sprintf("login=%s&password=%s", $login, $password),
+      CURLOPT_POSTFIELDS => $data,
       CURLOPT_URL        => "http://nasza-klasa.pl/login",
       CURLOPT_USERAGENT  => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1",
       CURLOPT_RETURNTRANSFER => true,
       )
     );
     $html = curl_exec($curl);
+    if (($code = curl_getinfo($curl, CURLINFO_HTTP_CODE)) != 200) {
+      throw new Exception(sprintf('Curl call returned status code %d', $code));
+    }
     $html = $this->cleanHtml($html);
     $html = $this->repairHtml($html);
     return $html;
@@ -41,16 +45,25 @@ class NKFeed
   protected function cleanHtml($html)
   {
     $html = str_replace('&nbsp;', '', $html);
-    //$html = str_replace('xmlns=', 'ns=', $html);
     return $html;
   }
 
   protected function repairHtml($html)
   {
+    $options = array(
+      'output-xhtml' => true, 
+      'clean' => true, 
+    );
     $tidy = new tidy();
-    $tidy->parseString($html, array('output-xhtml' => true, 'clean' => true, 'show-body-only' => false));
+    $tidy->parseString($html, $options, 'UTF8');
     $tidy->cleanRepair();
     return (string)$tidy;
+  }
+
+  protected function convertHtml($html)
+  {
+    $html = iconv('ISO-8859-2', 'UTF-8', $html);
+    return $html;
   }
 
   protected function getXML($html)
@@ -62,11 +75,19 @@ class NKFeed
 
   public function getFriendsPhotos()
   {
-    $html = $this->getContent();
-    $xml  = $this->getHtml($html);
-    var_dump($xml->xpath("//xmlns:div[@id='friends_photos_box']//xmlns:div[@class='thumb']"));
+    $xml  = $this->getXML($this->getContent());
+    $friends = $xml->xpath("//xmlns:div[@id='friends_photos_box']//xmlns:div[@class='thumb']");
+    $result  = array();
+    foreach ($friends as $friend) {
+      $result[] = array(
+        'user' => trim(str_replace("\n", " ", (string)$friend->div[1]->a)),
+        'date' => trim(str_replace("\n", " ", (string)$friend->div[1])),
+        'img'  => trim((string)$friend->div[0]->a->img['src']),
+      );
+    }
+    return $result;
   }
 }
 
 $feed = new NKFeed();
-$feed->getFriendsPhotos();
+print_r($feed->getFriendsPhotos());
