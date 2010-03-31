@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:widget="http://www.netvibes.com/ns/">
+  <head>
+    <title>NK Feed</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="author" content="Wojciech Sznapka" />
+    <meta name="description" content="Shows latest photos and events from Nasza-klasa.pl" />
+    <meta name="apiVersion" content="1.0" />
+    <meta name="debugMode" content="true" />
+
+    <link rel="stylesheet" type="text/css" href="http://www.netvibes.com/themes/uwa/style.css" />
+    <script type='text/javascript' src='http://netvibes.com/js/UWA/load.js.php?env=Standalone' charset='utf-8'></script>
+
+    <widget:preferences>
+        <preference name="login"    type="string"   label="Login" />
+        <preference name="password" type="string" label="Password" />
+        <preference name="friends"  type="boolean"  label="Latest friend photos" defaultValue="true" />
+        <preference name="events"   type="boolean"  label="My latest events"     defaultValue="false" />
+    </widget:preferences>
+
+    <style type="text/css">
+      .error {
+        font-weight: bold;
+        color: red;
+      }
+      .info {
+        font-style: italic;
+      }
+    </style>
+
+    <script type="text/javascript">
+      function dataProcessor (data) {
+        widget.setBody('');
+        for (var i in data.friends) {
+          widget.addBody('<img src="' + data.friends[i].img +'" alt="' + data.friends[i].user +'" />');
+        }
+      }
+
+      widget.onLoad = function() {
+        var login = widget.getValue('login');
+        var password = widget.getValue('password');
+        widget.log('login ' + login);
+        widget.log('password ' + password);
+        if (!login || !password) {
+          widget.setBody('<p class="error">Empty login or password ...</p>');
+        } else {
+          widget.setBody('<p class="info">Fetching data from nasza-klasa.pl ...</p>');
+          var url = 'http://wowo.ath.cx/?login='+ login + '&password=' + password;
+          if (widget.getBool('friends')) {
+            url += '&friends=1';
+          }
+          if (widget.getBool('events')) {
+            url += '&events=1';
+          }
+          widget.log(url);
+          UWA.Data.getJson(url, dataProcessor);
+        }
+
+      }
+    </script>
+  </head>
+  <body>
+    <p>NKFeed loading...</p>
+  </body>
+</html>

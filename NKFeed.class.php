@@ -73,7 +73,7 @@ class NKFeed
     $result  = array();
     $xml  = $this->getXML($this->getContent());
     $friends = $xml->xpath("//xmlns:div[@id='friends_photos_box']//xmlns:div[@class='thumb']");
-    foreach ($friends as $friend) {
+    foreach (is_array($friends) ? $friends : array() as $friend) {
       $result[] = array(
         'user' => trim(str_replace("\n", " ", (string)$friend->div[1]->a)),
         'date' => trim(str_replace("\n", " ", (string)$friend->div[1])),
@@ -110,7 +110,3 @@ class NKFeed
     return $result;
   }
 }
-
-$feed = new NKFeed(@$_SERVER['argv'][1], @$_SERVER['argv'][2]);
-print_r($feed->getFriendsPhotos());
-print_r($feed->getEvents());
