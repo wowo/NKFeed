@@ -32,16 +32,14 @@
     <script type="text/javascript">
       function dataProcessor (data) {
         widget.setBody('');
-        for (var i in data.friends) {
-          widget.addBody('<img src="' + data.friends[i].img +'" alt="' + data.friends[i].user +'" />');
+        for (var i = 0; i < data.friends.length; i++) {
+          widget.addBody('<img src="data:image/jpeg;base64,' + data.friends[i].img +'" alt="' + data.friends[i].user +'" />');
         }
       }
 
       widget.onLoad = function() {
         var login = widget.getValue('login');
         var password = widget.getValue('password');
-        widget.log('login ' + login);
-        widget.log('password ' + password);
         if (!login || !password) {
           widget.setBody('<p class="error">Empty login or password ...</p>');
         } else {
@@ -53,14 +51,12 @@
           if (widget.getBool('events')) {
             url += '&events=1';
           }
-          widget.log(url);
           UWA.Data.getJson(url, dataProcessor);
         }
-
       }
     </script>
   </head>
   <body>
-    <p>NKFeed loading...</p>
+    <p>NKFeed loading ...</p>
   </body>
 </html>

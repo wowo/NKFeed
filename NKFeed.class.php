@@ -30,11 +30,30 @@ class NKFeed
       if (($code = curl_getinfo($curl, CURLINFO_HTTP_CODE)) != 200) {
         throw new Exception(sprintf('Curl call returned status code %d', $code));
       }
+      curl_close($curl);
       $html = $this->cleanHtml($html);
       $html = $this->repairHtml($html);
       $this->content = $html;
     }
     return $this->content;
+  }
+
+  protected function getImage($src)
+  {
+    $curl = curl_init();
+    curl_setopt_array($curl, array(
+      CURLOPT_COOKIEJAR  => "/tmp/nk.cookie",
+      CURLOPT_URL        => $src,
+      CURLOPT_USERAGENT  => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1",
+      CURLOPT_RETURNTRANSFER => true,
+      )
+    );
+    $image = curl_exec($curl);
+    if (($code = curl_getinfo($curl, CURLINFO_HTTP_CODE)) != 200) {
+      throw new Exception(sprintf('Curl call returned status code %d', $code));
+    }
+    curl_close($curl);
+    return base64_encode($image);
   }
 
   protected function cleanHtml($html)
@@ -74,10 +93,12 @@ class NKFeed
     $xml  = $this->getXML($this->getContent());
     $friends = $xml->xpath("//xmlns:div[@id='friends_photos_box']//xmlns:div[@class='thumb']");
     foreach (is_array($friends) ? $friends : array() as $friend) {
+      $src = trim((string)$friend->div[0]->a->img['src']);
       $result[] = array(
         'user' => trim(str_replace("\n", " ", (string)$friend->div[1]->a)),
         'date' => trim(str_replace("\n", " ", (string)$friend->div[1])),
-        'img'  => trim((string)$friend->div[0]->a->img['src']),
+        'src'  => $src,
+        'img'  => $this->getImage($src),
       );
     }
     return $result;
