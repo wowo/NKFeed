@@ -30,29 +30,26 @@ class NKFeed
       if (($code = curl_getinfo($curl, CURLINFO_HTTP_CODE)) != 200) {
         throw new Exception(sprintf('Curl call returned status code %d', $code));
       }
-      $html = $this->cleanHtml($html);
       $html = $this->repairHtml($html);
       $this->content = $html;
     }
     return $this->content;
   }
 
-  protected function cleanHtml($html)
-  {
-    $html = str_replace('&nbsp;', '', $html);
-    return $html;
-  }
-
   protected function repairHtml($html)
   {
-    $options = array(
-      'output-xhtml' => true, 
-      'clean' => true, 
-    );
-    $tidy = new tidy();
-    $tidy->parseString($html, $options, 'UTF8');
-    $tidy->cleanRepair();
-    return (string)$tidy;
+    require_once 'htmlpurifier-4.0.0/library/HTMLPurifier.auto.php';
+    $cacheDir = '/tmp/htmlPurifierCache';
+    if (!file_exists($cacheDir)) {
+      mkdir($cacheDir);
+    }
+    $config = HTMLPurifier_Config::createDefault();
+    $config->set('Cache.SerializerPath', $cacheDir);
+    $config->set('HTML.Doctype', 'XHTML 1.0 Strict');
+    $config->set('Attr.EnableID', true);
+    $purifier = new HTMLPurifier($config);
+    $html = sprintf("<div>%s</div>", $purifier->purify($html));
+    return $html;
   }
 
   protected function convertHtml($html)
@@ -64,7 +61,6 @@ class NKFeed
   protected function getXML($html)
   {
     $xml = simplexml_load_string($html);
-    $xml->registerXPathNamespace("xmlns", "http://www.w3.org/1999/xhtml");
     return $xml;
   }
 
@@ -72,12 +68,16 @@ class NKFeed
   {
     $result  = array();
     $xml  = $this->getXML($this->getContent());
-    $friends = $xml->xpath("//xmlns:div[@id='friends_photos_box']//xmlns:div[@class='thumb']");
+    $friends = $xml->xpath("//div[@id='friends_photos_box']//div[@class='thumb']");
     foreach (is_array($friends) ? $friends : array() as $friend) {
+      //var_dump($friend);
+      $src = array_pop($friend->xpath(".//img[@class='thumb']/@src"));
+      $author = $friend->xpath(".//div[@class='author']");
+      var_dump($author);
       $result[] = array(
-        'user' => trim(str_replace("\n", " ", (string)$friend->div[1]->a)),
+        'user' => trim(str_replace("\n", " ", (string)$author->a)),
         'date' => trim(str_replace("\n", " ", (string)$friend->div[1])),
-        'img'  => trim((string)$friend->div[0]->a->img['src']),
+        'img'  => trim($src),
       );
     }
     return $result;
@@ -86,9 +86,9 @@ class NKFeed
   public function getEvents()
   {
     $xml  = $this->getXML($this->getContent());
-    $xpath = "//xmlns:table[contains(@class, 'mine')]//xmlns:a[@class='photo_thmb']/xmlns:img | ";
-    $xpath .= "//xmlns:table[contains(@class, 'mine')]//xmlns:p[@class='comment']/xmlns:a | ";
-    $xpath .= "//xmlns:table[contains(@class, 'mine')]//xmlns:td[@class='time'] ";
+    $xpath = "//table[contains(@class, 'mine')]//a[@class='photo_thmb']/img | ";
+    $xpath .= "//table[contains(@class, 'mine')]//p[@class='comment']/a | ";
+    $xpath .= "//table[contains(@class, 'mine')]//td[@class='time'] ";
     $events = $xml->xpath($xpath);
 
     $i = 0;
