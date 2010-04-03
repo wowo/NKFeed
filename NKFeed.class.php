@@ -1,17 +1,40 @@
 <?php
 
+/**
+ * NKFeed - retrieves data from nasza-klasa.pl
+ * 
+ * @package default
+ * @version $id$
+ * @copyright 
+ * @author Wojciech Sznapka <wojciech@sznapka.pl> 
+ * @license 
+ */
 class NKFeed
 {
   private $login = '';
   private $password = '';
   private $content = '';
 
+  /**
+   * the contructor
+   * 
+   * @param mixed $login 
+   * @param mixed $password 
+   * @access public
+   * @return void
+   */
   public function NKFeed($login, $password)
   {
     $this->login    = $login;
     $this->password = $password;
   }
 
+  /**
+   * gets html content of nasza-klasa.pl homepage
+   * 
+   * @access protected
+   * @return string
+   */
   protected function getContent()
   {
     if (empty($this->content)) {
@@ -37,6 +60,13 @@ class NKFeed
     return $this->content;
   }
 
+  /**
+   * gets image thumbnail from nasza-klasa.pl
+   * 
+   * @param mixed $src 
+   * @access protected
+   * @return string
+   */
   protected function getImage($src)
   {
     $curl = curl_init();
@@ -55,6 +85,13 @@ class NKFeed
     return base64_encode($image);
   }
 
+  /**
+   * repairs broken nasza-klasa.pl html, it uses HTMLPurifier library
+   * 
+   * @param mixed $html 
+   * @access protected
+   * @return string
+   */
   protected function repairHtml($html)
   {
     require_once 'htmlpurifier-4.0.0/library/HTMLPurifier.auto.php';
@@ -71,18 +108,38 @@ class NKFeed
     return $html;
   }
 
+  /**
+   * converts html from iso-8859-2 charset to utf-8
+   * 
+   * @param mixed $html 
+   * @access protected
+   * @return string
+   */
   protected function convertHtml($html)
   {
     $html = iconv('ISO-8859-2', 'UTF-8', $html);
     return $html;
   }
 
+  /**
+   * converts html into simplexml xml object
+   * 
+   * @param mixed $html 
+   * @access protected
+   * @return SimpleXMLObject
+   */
   protected function getXML($html)
   {
     $xml = simplexml_load_string($html);
     return $xml;
   }
 
+  /**
+   * get friends photos 
+   * 
+   * @access public
+   * @return array
+   */
   public function getFriendsPhotos()
   {
     $result  = array();
@@ -102,6 +159,12 @@ class NKFeed
     return $result;
   }
 
+  /**
+   * get events 
+   * 
+   * @access public
+   * @return array
+   */
   public function getEvents()
   {
     $xml  = $this->getXML($this->getContent());
