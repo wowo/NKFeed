@@ -18,8 +18,9 @@
     <script type='text/javascript' src='http://netvibes.com/js/UWA/load.js.php?env=Standalone' charset='utf-8'></script>
 
     <widget:preferences>
+        <preference name="url"      type="string" label="Webservice URL" defaultValue="http://wowo.ath.cx/" />
         <preference name="login"    type="string" label="Login" />
-        <preference name="password" type="password" label="Hasło" />
+        <preference name="pass"     type="password" label="Hasło" />
         <preference name="friends"  type="boolean"  label="Ostatnio dodane zdjęcia" defaultValue="true" />
         <preference name="events"   type="boolean"  label="Powiadomienia" defaultValue="false" />
     </widget:preferences>
@@ -86,7 +87,7 @@
     <script type="text/javascript">
     //<![CDATA[
       var NKFeed = {};
-      NKFeed.webServiceUrl = 'http://nk.sznapka.pl/';
+      NKFeed.webServiceUrl = widget.getValue('url');
       NKFeed.dataProcessor = function (data) {
         widget.setBody('');
         if (data.error) {
@@ -148,7 +149,7 @@
       NKFeed.dataInit = function() {
         if (NKFeed.browserCheck()) {
           var login    = widget.getValue('login');
-          var password = widget.getValue('password');
+          var password = widget.getValue('pass');
           if (!login || !password) {
             widget.setBody('<p class="error">Puste hasło lub login ...</p>');
           } else {
