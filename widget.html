@@ -23,6 +23,7 @@
         <preference name="url"      type="string" label="Webservice URL" defaultValue="http://wowo.ath.cx/" />
         <preference name="login"    type="string" label="Login" />
         <preference name="pass"     type="password" label="Hasło" />
+        <preference name="_pass"     type="hidden" defaultValue="" />
         <preference name="friends"  type="boolean"  label="Ostatnio dodane zdjęcia" defaultValue="true" />
         <preference name="events"   type="boolean"  label="Powiadomienia" defaultValue="false" />
     </widget:preferences>
@@ -152,6 +153,12 @@
         if (NKFeed.browserCheck()) {
           login    = typeof login == 'undefined'    ? widget.getValue('login') : login;
           password = typeof password == 'undefined' ? widget.data.pass : password;
+          if (!password) {
+            password = widget.getValue('_pass');
+          } else {
+            widget.setValue('_pass', password);
+          }
+
           if (!login) {
             widget.setBody('<p class="error">Pusty login ...</p>');
           } else if (!password) {
