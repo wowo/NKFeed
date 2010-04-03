@@ -52,8 +52,11 @@ class NKFeed
         )
       );
       $html = curl_exec($curl);
+      if ($error = curl_error($curl)) {
+        throw new NKException(sprintf('Curl call for homepage failed, error: %s', $error));
+      }
       if (($code = curl_getinfo($curl, CURLINFO_HTTP_CODE)) != 200) {
-        throw new Exception(sprintf('Curl call returned status code %d', $code));
+        throw new NKException(sprintf('Curl call for homepage returned status code %d', $code));
       }
       curl_close($curl);
       $html = $this->repairHtml($html);
@@ -95,8 +98,11 @@ class NKFeed
       )
     );
     $image = curl_exec($curl);
+    if ($error = curl_error($curl)) {
+      throw new NKException(sprintf('Curl call for image failed, error: %s', $error));
+    }
     if (($code = curl_getinfo($curl, CURLINFO_HTTP_CODE)) != 200) {
-      throw new Exception(sprintf('Curl call returned status code %d', $code));
+      throw new NKException(sprintf('Curl call for image returned status code %d', $code));
     }
     curl_close($curl);
     return base64_encode($image);
