@@ -5,18 +5,22 @@
     <title>NK Feed</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="author" content="Wojciech Sznapka" />
+    <meta name="email" content="wojciech@sznapka.pl" />
+    <meta name="website" content="http://sznapka.pl" />
     <meta name="description" content="Shows latest photos and events from Nasza-klasa.pl" />
-    <meta name="apiVersion" content="1.0" />
-    <meta name="debugMode" content="true" />
+    <meta name="autoRefresh" content="5" />
+    <meta name="apiVersion" content="1.2" />
+    <meta name="debugMode" content="false" />
 
     <link rel="stylesheet" type="text/css" href="http://www.netvibes.com/themes/uwa/style.css" />
+    <link rel="icon" type="image/x-icon" href="http://0.static.nk-net.pl/img/favicon_2010.ico" /> 
     <script type='text/javascript' src='http://netvibes.com/js/UWA/load.js.php?env=Standalone' charset='utf-8'></script>
 
     <widget:preferences>
-        <preference name="login"    type="string"   label="Login" />
-        <preference name="password" type="string" label="Password" />
-        <preference name="friends"  type="boolean"  label="Latest friend photos" defaultValue="true" />
-        <preference name="events"   type="boolean"  label="My latest events"     defaultValue="false" />
+        <preference name="login"    type="string" label="Login" />
+        <preference name="password" type="string" label="Hasło" />
+        <preference name="friends"  type="boolean"  label="Ostatnio dodane zdjęcia" defaultValue="true" />
+        <preference name="events"   type="boolean"  label="Powiadomienia" defaultValue="false" />
     </widget:preferences>
 
     <style type="text/css">
@@ -27,36 +31,137 @@
       .info {
         font-style: italic;
       }
+      h1 {
+        color: #175d90;
+        font-family: Tahoma, Verdana, sans-serif;
+        font-size: 110%;
+        font-weight: bold;
+        background: #eee;
+        padding: 5px;
+        margin: 5px 0px;
+      }
+
+      .photos li {
+        background: none;
+        display: inline-block;
+        list-style-type: none !important;
+        padding-left: 10px;
+        vertical-align: top;
+      }
+      .user, .date{
+        display: block;
+        text-align: center;
+        width: 110px;
+      }
+      .date {
+        font-size: 90%;
+      }
+      .user {
+        color: #175d90;
+        font-weight: bold;
+        width: 110px;
+        margin-top: 2px;
+      }
+      .thumbContainer img {
+        margin: 0 auto;
+        display: inline-block;
+        vertical-align: middle;
+      }
+      .thumbContainer {
+        height: 110px;
+        width:  110px;
+        text-align: center;
+      }
+      .verticalCenter {
+        display: inline-block;
+        vertical-align:middle;
+      }
+      .photos img {
+        border: 1px solid #ccdce8;
+        padding: 5px;
+      }
     </style>
 
     <script type="text/javascript">
-      function dataProcessor (data) {
+    //<![CDATA[
+      var NKFeed = {};
+      NKFeed.webServiceUrl = 'http://wowo.ath.cx/';
+      NKFeed.dataProcessor = function (data) {
         widget.setBody('');
-        for (var i = 0; i < data.friends.length; i++) {
-          widget.addBody('<img src="data:image/jpeg;base64,' + data.friends[i].img +'" alt="' + data.friends[i].user +'" />');
+        if (data.friends.length > 0) {
+          NKFeed.displayFriendsPhotos(data.friends);
         }
       }
 
-      widget.onLoad = function() {
-        var login = widget.getValue('login');
-        var password = widget.getValue('password');
-        if (!login || !password) {
-          widget.setBody('<p class="error">Empty login or password ...</p>');
+      NKFeed.displayFriendsPhotos = function (photos) {
+        var h1 = widget.createElement('h1', {'text': 'Ostatnio dodane zdjęcia'});
+        var ul = widget.createElement('ul', {'class': 'photos', 'id': 'friends'});
+        widget.body.appendChild(h1);
+        widget.body.appendChild(ul);
+        for (var i = 0; i < photos.length; i++) {
+          var img = widget.createElement('img', {
+            'src': 'data:image/jpeg;base64,' + photos[i].img,
+            'alt': photos[i].user
+          });
+          var imgContainer = widget.createElement('div', {
+            'class': 'thumbContainer'
+          });
+          var imgCenter = widget.createElement('span', {
+            'class': 'verticalCenter'
+          });
+          imgContainer.appendChild(imgCenter);
+          imgContainer.appendChild(img);
+          var li = widget.createElement('li');
+          var date = widget.createElement('span', {
+            'class': 'date',
+            'text': photos[i].date
+          });
+          var user = widget.createElement('span', {
+            'class': 'user',
+            'text': photos[i].user
+          });
+          li.appendChild(imgContainer);
+          li.appendChild(user);
+          li.appendChild(date);
+          ul.appendChild(li);
+        }
+
+      }
+      NKFeed.browserCheck = function() {
+        if (window.navigator.userAgent.indexOf('MSIE') > -1) {
+          widget.setBody('<p class="error">Przeglądarka IE nie jest wspierana ze względu na swoje ' +
+            'niedoskonałości, proszę użyć Firefox, Chrome, Opera, Safari lub podobnej.');
+          return false;
         } else {
-          widget.setBody('<p class="info">Fetching data from nasza-klasa.pl ...</p>');
-          var url = 'http://wowo.ath.cx/?login='+ login + '&password=' + password;
-          if (widget.getBool('friends')) {
-            url += '&friends=1';
-          }
-          if (widget.getBool('events')) {
-            url += '&events=1';
-          }
-          UWA.Data.getJson(url, dataProcessor);
+          return true;
         }
       }
+
+      NKFeed.dataInit = function() {
+        if (NKFeed.browserCheck()) {
+          var login    = widget.getValue('login');
+          var password = widget.getValue('password');
+          if (!login || !password) {
+            widget.setBody('<p class="error">Puste hasło lub login ...</p>');
+          } else {
+            widget.setBody('<p class="info">Pobieram dane z nasza-klasa.pl ...</p>');
+            var url = NKFeed.webServiceUrl + '?login='+ login + '&password=' + password;
+            if (widget.getBool('friends')) {
+              url += '&friends=1';
+            }
+            if (widget.getBool('events')) {
+              url += '&events=1';
+            }
+            UWA.Data.getJson(url, NKFeed.dataProcessor);
+          }
+        }
+      }
+
+      widget.onLoad = NKFeed.dataInit;
+    //]]>
     </script>
   </head>
   <body>
-    <p>NKFeed loading ...</p>
+    <p>Ładuję widget ...</p>
   </body>
 </html>
