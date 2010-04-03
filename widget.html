@@ -150,10 +150,12 @@
 
       NKFeed.dataInit = function() {
         if (NKFeed.browserCheck()) {
-          var login    = widget.getValue('login');
-          var password = widget.getValue('pass');
-          if (!login || !password) {
-            widget.setBody('<p class="error">Puste hasło lub login ...</p>');
+          login    = typeof login == 'undefined'    ? widget.getValue('login') : login;
+          password = typeof password == 'undefined' ? widget.getValue('pass' ) : password;
+          if (!login) {
+            widget.setBody('<p class="error">Pusty login ...</p>');
+          } else if (!password) {
+            widget.setBody('<p class="error">Puste hasło ...</p>');
           } else {
             widget.setBody('<p class="info">Pobieram dane z nasza-klasa.pl ...</p>');
             var url = NKFeed.webServiceUrl + '?login='+ login + '&password=' + password;
