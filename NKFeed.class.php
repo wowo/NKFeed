@@ -46,9 +46,10 @@ class NKFeed
         CURLOPT_COOKIEJAR  => "/tmp/nk.cookie",
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_POSTFIELDS => $data,
-        CURLOPT_URL        => "http://nasza-klasa.pl/login",
-        CURLOPT_USERAGENT  => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1",
+        CURLOPT_REFERER => "http://nasza-klasa.pl/"
         CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_URL => "http://nasza-klasa.pl/login",
+        CURLOPT_USERAGENT  => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1",
         )
       );
       $html = curl_exec($curl);
