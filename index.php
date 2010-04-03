@@ -5,12 +5,28 @@ include_once('NKFeed.class.php');
 //$feed = new NKFeed(@$_SERVER['argv'][1], @$_SERVER['argv'][2]);
 $feed = new NKFeed(@$_REQUEST['login'], @$_REQUEST['password']);
 $output = array();
-if (@$_REQUEST['friends']) {
-  $output['friends'] = $feed->getFriendsPhotos();
+try {
+  if (@$_REQUEST['friends']) {
+    $output['friends'] = $feed->getFriendsPhotos();
+  }
+  if (@$_REQUEST['events']) {
+    $output['events'] = $feed->getEvents();
+  }
+} catch (NKException $e) {
+  if ($e->getCode() == NKException::LOGIN_FAILED) {
+    header("HTTP/1.0 401 Unauthorized", true, 401);
+  } else {
+    header("HTTP/1.0 409 Conflict", true, 409);
+  }
+  $output = array('error' => $e->getMessage());
+} catch (Exception $e) {
+  header("HTTP/1.0 503 Service Unavailable", true, 503);
+  $output = array(
+    'error' => 'Wystąpił błąd, proszę spróbować później',
+    'fullError' => $e->getMessage(),
+  );
 }
-if (@$_REQUEST['events']) {
-  $output['events'] = $feed->getEvents();
-}
+
 
 switch (@$_REQUEST['format']) {
   case 'xml':

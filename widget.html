@@ -19,7 +19,7 @@
 
     <widget:preferences>
         <preference name="login"    type="string" label="Login" />
-        <preference name="password" type="string" label="Hasło" />
+        <preference name="password" type="password" label="Hasło" />
         <preference name="friends"  type="boolean"  label="Ostatnio dodane zdjęcia" defaultValue="true" />
         <preference name="events"   type="boolean"  label="Powiadomienia" defaultValue="false" />
     </widget:preferences>
@@ -86,10 +86,17 @@
     <script type="text/javascript">
     //<![CDATA[
       var NKFeed = {};
-      NKFeed.webServiceUrl = 'http://wowo.ath.cx/';
+      NKFeed.webServiceUrl = 'http://nk.sznapka.pl/';
       NKFeed.dataProcessor = function (data) {
         widget.setBody('');
-        if (data.friends.length > 0) {
+        if (data.error) {
+          var error = widget.createElement('p', {
+            'class': 'error',
+            'text': data.error
+          });
+          widget.body.appendChild(error);
+        }
+        if (data.friends && data.friends.length > 0) {
           NKFeed.displayFriendsPhotos(data.friends);
         }
       }
@@ -142,6 +149,7 @@
         if (NKFeed.browserCheck()) {
           var login    = widget.getValue('login');
           var password = widget.getValue('password');
+          alert(password);
           if (!login || !password) {
             widget.setBody('<p class="error">Puste hasło lub login ...</p>');
           } else {
@@ -153,7 +161,16 @@
             if (widget.getBool('events')) {
               url += '&events=1';
             }
-            UWA.Data.getJson(url, NKFeed.dataProcessor);
+            UWA.Data.request(
+              url, 
+              { 
+                method: 'get', 
+                proxy: 'ajax', 
+                type: 'json', 
+                cache: 0,
+                onComplete: NKFeed.dataProcessor,
+              }
+            );
           }
         }
       }

@@ -1,4 +1,5 @@
 <?php
+include_once('NKException.class.php');
 
 /**
  * NKFeed - retrieves data from nasza-klasa.pl
@@ -32,6 +33,7 @@ class NKFeed
   /**
    * gets html content of nasza-klasa.pl homepage
    * 
+   * @throws NKException when login fails
    * @access protected
    * @return string
    */
@@ -57,7 +59,22 @@ class NKFeed
       $html = $this->repairHtml($html);
       $this->content = $html;
     }
+    if (!$this->isLoggedIn($this->content)) {
+      throw new NKException(NULL, NKException::LOGIN_FAILED);
+    }
     return $this->content;
+  }
+
+  /**
+   * check if user is logged in (looking for url login)
+   * 
+   * @param mixed $html 
+   * @access protected
+   * @return void
+   */
+  protected function isLoggedIn($html)
+  {
+    return (stripos($html, 'nasza-klasa.pl/login') === false);
   }
 
   /**
