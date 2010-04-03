@@ -151,7 +151,7 @@
       NKFeed.dataInit = function() {
         if (NKFeed.browserCheck()) {
           login    = typeof login == 'undefined'    ? widget.getValue('login') : login;
-          password = typeof password == 'undefined' ? widget.getValue('pass' ) : password;
+          password = typeof password == 'undefined' ? widget.data.pass : password;
           if (!login) {
             widget.setBody('<p class="error">Pusty login ...</p>');
           } else if (!password) {
