@@ -22,7 +22,7 @@
     <widget:preferences>
         <preference name="url"      type="string" label="Webservice URL" defaultValue="http://wowo.ath.cx/" />
         <preference name="nklogin"  type="string" label="Login" />
-        <preference name="nkpass"   type="password" label="Hasło" />
+        <preference name="pass"   type="password" label="Hasło" />
         <preference name="_pass"    type="hidden" defaultValue="" />
         <preference name="friends"  type="boolean"  label="Ostatnio dodane zdjęcia" defaultValue="true" />
         <preference name="events"   type="boolean"  label="Powiadomienia" defaultValue="false" />
@@ -152,7 +152,7 @@
       NKFeed.dataInit = function() {
         if (NKFeed.browserCheck()) {
           login    = typeof login == 'undefined'    ? widget.getValue('nklogin') : login;
-          password = typeof password == 'undefined' ? widget.data.nkpass : password;
+          password = typeof password == 'undefined' ? widget.data.pass : password;
           if (!password) {
             password = widget.getValue('_pass');
           } else {
