@@ -173,11 +173,13 @@ class NKFeed
       $img    = $friend->xpath(".//img[@class='thumb']");
       $author = $friend->xpath(".//div[@class='author']/a");
       $date   = $friend->xpath(".//div[@class='author']");
+      $url    = $friend->xpath(".//a");
       $result[] = array(
         'user' => trim(str_replace("\n", " ", (string)$author[0])),
         'date' => trim(str_replace("\n", " ", (string)$date[0])),
         'src'  => (string)$img[0]['src'],
         'img'  => $this->getImage($img[0]['src']),
+        'url'  => sprintf("http://nasza-klasa.pl%s", $url[0]['href']),
       );
     }
     return $result;
