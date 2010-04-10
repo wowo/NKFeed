@@ -1,5 +1,6 @@
 <?php
 include_once('NKException.class.php');
+include_once('NKProxyFinder.class.php');
 
 /**
  * NKFeed - retrieves data from nasza-klasa.pl
@@ -12,9 +13,11 @@ include_once('NKException.class.php');
  */
 class NKFeed
 {
-  private $login = '';
+  private $login    = '';
   private $password = '';
-  private $content = '';
+  private $content  = '';
+  private $useProxy = false;
+  private $proxySource = 'data/proxies.csv';
 
   /**
    * the contructor
@@ -24,10 +27,11 @@ class NKFeed
    * @access public
    * @return void
    */
-  public function NKFeed($login, $password)
+  public function NKFeed($login, $password, $useProxy = false)
   {
     $this->login    = $login;
     $this->password = $password;
+    $this->useProxy = $useProxy;
   }
 
   /**
@@ -52,6 +56,11 @@ class NKFeed
         CURLOPT_USERAGENT  => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1",
         )
       );
+      if ($this->useProxy) {
+        $proxy = $this->getProxy();
+        curl_setopt($curl, CURLOPT_PROXY, $proxy['ip']);
+        curl_setopt($curl, CURLOPT_PROXYPORT, $proxy['port']);
+      }
       $html = curl_exec($curl);
       if ($error = curl_error($curl)) {
         throw new NKException(sprintf('Curl call for homepage failed, error: %s', $error));
@@ -68,6 +77,19 @@ class NKFeed
     }
     return $this->content;
   }
+
+  protected function getProxy()
+  {
+    if (is_readable($this->proxySource)) {
+      $proxyFinder = new NKProxyFinder($this->proxySource);
+      return $proxyFinder->getRandomProxy();
+    } else {
+      throw new NKException(sprintf('Proxy source "%s" is not readable', $this->proxySource));
+    }
+  }
+            
+
+
 
   /**
    * check if user is logged in (looking for url login)

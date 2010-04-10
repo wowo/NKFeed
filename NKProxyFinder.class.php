@@ -20,12 +20,21 @@ class NKProxyFinder
   {
     $proxies = array();
     foreach ($this->readCSV($this->csvFilepath) as $row) {
-      $proxy = array('ip' => $row[self::PROXY_IP], 'port' => $row[self::PROXY_PORT]);
+      $proxy = $this->getProxyFromRecord($row);
       if ($this->isValidProxy($row[self::PROXY_IP], $row[self::PROXY_PORT])) {
         $proxies[] = $proxy;
       }
     }
     return $proxies;
+  }
+
+  public function getRandomProxy()
+  {
+    $proxies = $this->readCSV($this->csvFilepath);
+    if (count($proxies) == 0) {
+      throw new NKException('No proxies in source');
+    }
+    return $this->getProxyFromRecord($proxies[array_rand($proxies)]);
   }
 
   public function saveValidProxiesToFile($filepath = 'data/proxies.csv')
@@ -40,6 +49,12 @@ class NKProxyFinder
     }
     file_put_contents($filepath, implode("\n", $output));
   }
+
+  private function getProxyFromRecord($record)
+  {
+    return array('ip' => $record[self::PROXY_IP], 'port' => $record[self::PROXY_PORT]);
+  }
+
 
   private function readCSV ($filepath)
   {
