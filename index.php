@@ -1,9 +1,7 @@
 <?php
-
 include_once('NKFeed.class.php');
 
-//$feed = new NKFeed(@$_SERVER['argv'][1], @$_SERVER['argv'][2]);
-$feed = new NKFeed(@$_REQUEST['login'], @$_REQUEST['password']);
+$feed = new NKFeed(@$_REQUEST['login'], @$_REQUEST['password'], true);
 $output = array();
 try {
   if (@$_REQUEST['friends']) {
