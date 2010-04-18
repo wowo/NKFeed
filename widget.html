@@ -28,13 +28,18 @@
     </widget:preferences>
 
     <style type="text/css">
+      #nkfeed-message {
+        background: #DBD6D4;
+        border:1px solid #B5A199;
+        padding: 5px 10px;
+      }
       .error {
-        color: red;
-        font-weight: bold;
+        color: #c82f2f;
       }
       .info {
-        font-style: italic;
+        color: #397610;
       }
+
       h1 {
         background: #eee;
         color: #175d90;
@@ -93,26 +98,44 @@
     <script type="text/javascript">
     //<![CDATA[
       var NKFeed = {};
-      NKFeed.webServiceUrl = 'http://nk.sznapka.pl/';
+      /**
+       * Web service URL
+       */
+      //NKFeed.webServiceUrl = 'http://nk.sznapka.pl/';
+      NKFeed.webServiceUrl = 'http://wowo.ath.cx/';
+
+      /**
+       * Processes data retrieved from webservice 
+       *
+       * @param object data
+       * @return void
+       */
       NKFeed.dataProcessor = function (data) {
-        widget.setBody('');
         if (data.error) {
-          var error = widget.createElement('p', {
-            'class': 'error',
-            'text': data.error
-          });
-          widget.body.appendChild(error);
+          NKFeed.showMessage(data.error, 'error');
+        } else {
+          NKFeed.hideMessage();
         }
         if (data.friends && data.friends.length > 0) {
           NKFeed.displayFriendsPhotos(data.friends);
         }
       }
 
+      /**
+       * Displays friends photos in the widget 
+       *
+       * @param object photos
+       * @return void
+       */
       NKFeed.displayFriendsPhotos = function (photos) {
         var h1 = widget.createElement('h1', {'text': 'Ostatnio dodane zdjęcia'});
         var ul = widget.createElement('ul', {'class': 'photos', 'id': 'friends'});
-        widget.body.appendChild(h1);
-        widget.body.appendChild(ul);
+        var content = widget.body.getElementById('nkfeed-content');
+        while (content.childNodes.length >= 1) {
+          content.removeChild(content.firstChild);       
+        } 
+        content.appendChild(h1);
+        content.appendChild(ul);
         for (var i = 0; i < photos.length; i++) {
           var img = widget.createElement('img', {
             'src': 'data:image/jpeg;base64,' + photos[i].img,
@@ -141,18 +164,28 @@
           li.appendChild(date);
           ul.appendChild(li);
         }
-
       }
+
+      /**
+       * Checks wheter widget is running in modern browser 
+       *
+       * @return boolean
+       */
       NKFeed.browserCheck = function() {
         if (window.navigator.userAgent.indexOf('MSIE') > -1) {
-          widget.setBody('<p class="error">Przeglądarka IE nie jest wspierana ze względu na swoje ' +
-            'niedoskonałości, proszę użyć Firefox, Chrome, Opera, Safari lub podobnej.');
+          NKFeed.showMessage('Przeglądarka IE nie jest wspierana ze względu na swoje ' +
+            'niedoskonałości, proszę użyć Firefox, Chrome, Opera, Safari lub podobnej.', 'error');
           return false;
         } else {
           return true;
         }
       }
 
+      /**
+       * Initializes widget - checks if login and password are passed and sends request for data to webservice
+       *
+       * @return void
+       */
       NKFeed.dataInit = function() {
         if (NKFeed.browserCheck()) {
           login    = typeof login == 'undefined'    ? widget.getValue('nklogin') : login;
@@ -164,11 +197,11 @@
           }
 
           if (!login) {
-            widget.setBody('<p class="error">Pusty login ...</p>');
+            NKFeed.showMessage('Pusty login ...', 'error');
           } else if (!password) {
-            widget.setBody('<p class="error">Puste hasło ...</p>');
+            NKFeed.showMessage('Puste hasło ...', 'error');
           } else {
-            widget.setBody('<p class="info">Pobieram dane z nasza-klasa.pl ...</p>');
+            NKFeed.showMessage('Pobieram dane z nasza-klasa.pl ...');
             var url = NKFeed.webServiceUrl + '?login='+ login + '&password=' + password;
             if (widget.getBool('friends')) {
               url += '&friends=1';
@@ -190,11 +223,40 @@
         }
       }
 
+      /**
+       * Shows message on top of the widget  
+       *
+       * @param string message
+       * @param string type (info/error)
+       * @return void
+       */
+      NKFeed.showMessage = function(message, type) {
+        if (typeof type == 'undefined') {
+          type = 'info';
+        }
+        var msg = widget.body.getElementById('nkfeed-message');
+        if (msg) {
+          msg.innerHTML = message;
+          msg.className = type;
+          msg.style.display = 'block';
+        }
+      }
+
+      /**
+       * Hides widget message 
+       *
+       * @return void
+       */
+      NKFeed.hideMessage = function() {
+        widget.body.getElementById('nkfeed-message').style.display = 'none';
+      }
+
       widget.onLoad = NKFeed.dataInit;
     //]]>
     </script>
   </head>
   <body>
-    <p>Ładuję widget ...</p>
+    <div id="nkfeed-message"></div>
+    <div id="nkfeed-content"></div>
   </body>
 </html>

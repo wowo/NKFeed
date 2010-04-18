@@ -50,7 +50,7 @@ class NKFeed
         CURLOPT_COOKIEJAR  => "/tmp/nk.cookie",
         CURLOPT_FOLLOWLOCATION => true,
         CURLOPT_POSTFIELDS => $data,
-        CURLOPT_REFERER => "http://nasza-klasa.pl/",
+        CURLOPT_REFERER => "http://nasza-klasa.pl",
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_URL => "http://nasza-klasa.pl/login",
         CURLOPT_USERAGENT  => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1",
@@ -63,40 +63,44 @@ class NKFeed
       }
       $html = curl_exec($curl);
       if ($error = curl_error($curl)) {
-        throw new NKException(sprintf('Curl call for homepage failed, error: %s', $error));
+        throw new NKException(NULL, NKException::CURL_ERROR, NULL, array(), sprintf('error: %s, login: %s, proxy: %s', $error, $this->login, $proxy['ip']));
       }
       if (($code = curl_getinfo($curl, CURLINFO_HTTP_CODE)) != 200) {
-        throw new NKException(sprintf('Curl call for homepage returned status code %d', $code));
+        throw new NKException(NULL, NKException::CURL_STATUS_CODE, NULL, array(), sprintf('code: %d, login: %s, proxy: %s', $code, $this->login, $proxy['ip']));
       }
       curl_close($curl);
       $html = $this->repairHtml($html);
       $this->content = $html;
     }
     if (!$this->isLoggedIn($this->content)) {
-      throw new NKException(NULL, NKException::LOGIN_FAILED);
+      throw new NKException(NULL, NKException::LOGIN_FAILED, NULL, array(), sprintf('login: %s', $this->login));
     }
     return $this->content;
   }
 
+  /**
+   * gets proxy from proxy source
+   * 
+   * @throws NKException when proxy source isn't readable
+   * @access protected
+   * @return string
+   */
   protected function getProxy()
   {
     if (is_readable($this->proxySource)) {
       $proxyFinder = new NKProxyFinder($this->proxySource);
       return $proxyFinder->getRandomProxy();
     } else {
-      throw new NKException(sprintf('Proxy source "%s" is not readable', $this->proxySource));
+      throw new NKException(NULL, NKException::PROXY_SOURCE_NOT_READABLE, NULL, array(), $this->proxySource);
     }
   }
             
-
-
-
   /**
    * check if user is logged in (looking for url login)
    * 
    * @param mixed $html 
    * @access protected
-   * @return void
+   * @return boolean
    */
   protected function isLoggedIn($html)
   {
@@ -122,10 +126,10 @@ class NKFeed
     );
     $image = curl_exec($curl);
     if ($error = curl_error($curl)) {
-      throw new NKException(sprintf('Curl call for image failed, error: %s', $error));
+      throw new NKException(NULL, NKException::CURL_ERROR, NULL, array(), sprintf('error: %s, login: %s, proxy: %s', $error, $this->login, $proxy['ip']));
     }
     if (($code = curl_getinfo($curl, CURLINFO_HTTP_CODE)) != 200) {
-      throw new NKException(sprintf('Curl call for image returned status code %d', $code));
+      throw new NKException(NULL, NKException::CURL_STATUS_CODE, NULL, array(), sprintf('code: %d, login: %s, proxy: %s', $code, $this->login, $proxy['ip']));
     }
     curl_close($curl);
     return base64_encode($image);
